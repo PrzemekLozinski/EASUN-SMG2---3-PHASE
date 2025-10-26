@@ -1,0 +1,26 @@
+- type: grid
+  columns: 2
+  square: false
+  cards:
+    - type: gauge
+      name: Łączna moc PV
+      entity: sensor.total_pv_power
+      unit: W
+      min: 0
+      max: 18600
+      needle: true
+      severity:
+        green: 0
+        yellow: 12000
+        red: 17500
+    - type: gauge
+      name: Łączna moc obciążenia
+      entity: sensor.total_load_power
+      unit: W
+      min: 0
+      max: 18600
+      needle: true
+      severity:
+        green: 0
+        yellow: 14000
+        red: 17500

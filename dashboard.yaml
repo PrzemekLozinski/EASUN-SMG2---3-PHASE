@@ -1,0 +1,169 @@
+title: Easun SMG2
+views:
+  - title: Trójfazowy układ
+    path: easun-smg2
+    panel: true
+    cards:
+      - type: vertical-stack
+        cards:
+          # ──────────────── FALOWNIKI 3-FAZOWE ────────────────
+          - type: grid
+            columns: 3
+            square: false
+            cards:
+              # Falownik P1
+              - type: vertical-stack
+                cards:
+                  - type: gauge
+                    name: Load Power
+                    entity: sensor.easun_smg2_3phase_p1_load_power
+                    unit: W
+                    min: 0
+                    max: 6200
+                    needle: true
+                    severity:
+                      green: 0
+                      yellow: 4000
+                      red: 5800
+                  - type: gauge
+                    name: Battery Voltage
+                    entity: sensor.easun_smg2_3phase_p1_battery_average_voltage
+                    unit: V
+                    min: 40
+                    max: 60
+                    severity:
+                      green: 48
+                      yellow: 54
+                      red: 58
+                  - type: gauge
+                    name: Battery Current
+                    entity: sensor.easun_smg2_3phase_p1_battery_average_current
+                    unit: A
+                    min: -50
+                    max: 50
+                    severity:
+                      green: -10
+                      yellow: 20
+                      red: 40
+                  - type: entities
+                    title: ⚡ Falownik P1 – Południe
+                    entities:
+                      - entity: sensor.easun_smg2_3phase_p1_pv_voltage
+                        name: PV Voltage
+                      - entity: sensor.easun_smg2_3phase_p1_pv_current
+                        name: PV Current
+                      - entity: sensor.easun_smg2_3phase_p1_inverter_temperature
+                        name: Inverter Temp
+
+              # Falownik P2
+              - type: vertical-stack
+                cards:
+                  - type: gauge
+                    name: Load Power
+                    entity: sensor.easun_smg2_3phase_p2_load_power
+                    unit: W
+                    min: 0
+                    max: 6200
+                    needle: true
+                    severity:
+                      green: 0
+                      yellow: 4000
+                      red: 5800
+                  - type: gauge
+                    name: Battery Voltage
+                    entity: sensor.easun_smg2_3phase_p2_battery_average_voltage
+                    unit: V
+                    min: 40
+                    max: 60
+                    severity:
+                      green: 48
+                      yellow: 54
+                      red: 58
+                  - type: gauge
+                    name: Battery Current
+                    entity: sensor.easun_smg2_3phase_p2_battery_average_current
+                    unit: A
+                    min: -50
+                    max: 50
+                    severity:
+                      green: -10
+                      yellow: 20
+                      red: 40
+                  - type: entities
+                    title: ⚡ Falownik P2 – Wschód
+                    entities:
+                      - entity: sensor.easun_smg2_3phase_p2_pv_voltage
+                        name: PV Voltage
+                      - entity: sensor.easun_smg2_3phase_p2_pv_current
+                        name: PV Current
+                      - entity: sensor.easun_smg2_3phase_p2_inverter_temperature
+                        name: Inverter Temp
+
+              # Falownik P3
+              - type: vertical-stack
+                cards:
+                  - type: gauge
+                    name: Load Power
+                    entity: sensor.easun_smg2_3phase_p3_load_power
+                    unit: W
+                    min: 0
+                    max: 6200
+                    needle: true
+                    severity:
+                      green: 0
+                      yellow: 4000
+                      red: 5800
+                  - type: gauge
+                    name: Battery Voltage
+                    entity: sensor.easun_smg2_3phase_p3_battery_average_voltage
+                    unit: V
+                    min: 40
+                    max: 60
+                    severity:
+                      green: 48
+                      yellow: 54
+                      red: 58
+                  - type: gauge
+                    name: Battery Current
+                    entity: sensor.easun_smg2_3phase_p3_battery_average_current
+                    unit: A
+                    min: -50
+                    max: 50
+                    severity:
+                      green: -10
+                      yellow: 20
+                      red: 40
+                  - type: entities
+                    title: ⚡ Falownik P3 – Zachód
+                    entities:
+                      - entity: sensor.easun_smg2_3phase_p3_pv_voltage
+                        name: PV Voltage
+                      - entity: sensor.easun_smg2_3phase_p3_pv_current
+                        name: PV Current
+                      - entity: sensor.easun_smg2_3phase_p3_inverter_temperature
+                        name: Inverter Temp
+
+          # ──────────────── TRYB PRACY ────────────────
+          - type: entities
+            title: ⚙️ Tryb pracy falowników (Master – P1)
+            show_header_toggle: false
+            entities:
+              - entity: select.easun_smg2_3phase_p1_output_mode
+                name: Output Mode
+                icon: mdi:source-merge
+              - entity: select.easun_smg2_3phase_p1_output_priority
+                name: Output Priority
+                icon: mdi:flash
+
+          # ──────────────── SUMA MOCY ────────────────
+          - type: gauge
+            name: Łączna moc obciążenia
+            entity: sensor.total_load_power
+            unit: W
+            min: 0
+            max: 18600
+            needle: true
+            severity:
+              green: 0
+              yellow: 14000
+              red: 17500

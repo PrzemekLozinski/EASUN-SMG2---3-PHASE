@@ -1,0 +1,384 @@
+esphome:
+  name: easun-smg2-3phase
+  comment: "ESP32 RS485 → 3x Easun SMG2 (WiFi Modbus Bridge)"
+  on_boot:
+    priority: -100
+    then:
+      - script.execute: wifi_blink  # miga do czasu połączenia
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: "YourWiFiName"
+  password: "YourPassword"
+  ap:
+    ssid: "Easun-SMG2-Setup"
+    password: "12345678"
+  on_connect:
+    then:
+      - script.stop: wifi_blink
+      - output.turn_on: led_status
+  on_disconnect:
+    then:
+      - script.execute: wifi_blink
+
+logger:
+  level: INFO
+  baud_rate: 0  # wyłącz logi UART (używamy ich dla RS485)
+
+api:
+ota:
+  platform: esphome
+
+web_server:
+
+# ───────────────── LED STATUS
+output:
+  - platform: gpio
+    id: led_status
+    pin: 2
+    inverted: false
+
+script:
+  - id: wifi_blink
+    mode: restart
+    then:
+      - while:
+          condition:
+            not:
+              wifi.connected:
+          then:
+            - output.turn_on: led_status
+            - delay: 300ms
+            - output.turn_off: led_status
+            - delay: 300ms
+
+# ───────────────── 3x UART dla trzech falowników
+uart:
+  - id: uart_p1
+    tx_pin: GPIO17
+    rx_pin: GPIO16
+    baud_rate: 9600
+    parity: NONE
+    stop_bits: 1
+  - id: uart_p2
+    tx_pin: GPIO4
+    rx_pin: GPIO5
+    baud_rate: 9600
+    parity: NONE
+    stop_bits: 1
+  - id: uart_p3
+    tx_pin: GPIO25
+    rx_pin: GPIO26
+    baud_rate: 9600
+    parity: NONE
+    stop_bits: 1
+
+modbus:
+  - id: modbus1
+    uart_id: uart_p1
+    flow_control_pin: GPIO21
+    send_wait_time: 200ms
+  - id: modbus2
+    uart_id: uart_p2
+    flow_control_pin: GPIO22
+    send_wait_time: 200ms
+  - id: modbus3
+    uart_id: uart_p3
+    flow_control_pin: GPIO23
+    send_wait_time: 200ms
+
+modbus_controller:
+  - id: easun_p1
+    address: 0x01
+    modbus_id: modbus1
+    update_interval: 5s
+  - id: easun_p2
+    address: 0x01
+    modbus_id: modbus2
+    update_interval: 5s
+  - id: easun_p3
+    address: 0x01
+    modbus_id: modbus3
+    update_interval: 5s
+
+# ───────────────── CZUJNIKI (Twoje rejestry ×3)
+# kopiujemy z Twojego działającego falownika, tylko zmieniamy nazwy
+
+sensor:
+  # ================= FALOWNIK P1 =================
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 PV Voltage"
+    register_type: holding
+    address: 219
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 PV Current"
+    register_type: holding
+    address: 220
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Battery Average Voltage"
+    register_type: holding
+    address: 215
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Battery Average Current"
+    register_type: holding
+    address: 232
+    value_type: S_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 AC Output Voltage"
+    register_type: holding
+    address: 210
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 AC Output Frequency"
+    register_type: holding
+    address: 212
+    value_type: U_WORD
+    unit_of_measurement: "Hz"
+    accuracy_decimals: 2
+    filters: [ { multiply: 0.01 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Load Power"
+    register_type: holding
+    address: 213
+    value_type: U_WORD
+    unit_of_measurement: "W"
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Mains Voltage"
+    register_type: holding
+    address: 202
+    value_type: S_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Mains Frequency"
+    register_type: holding
+    address: 203
+    value_type: S_WORD
+    unit_of_measurement: "Hz"
+    accuracy_decimals: 2
+    filters: [ { multiply: 0.01 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Average Mains Power"
+    register_type: holding
+    address: 204
+    value_type: S_WORD
+    unit_of_measurement: "W"
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 DCDC Temperature"
+    register_type: holding
+    address: 226
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Inverter Temperature"
+    register_type: holding
+    address: 227
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+
+  # ================= FALOWNIK P2 =================
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 PV Voltage"
+    register_type: holding
+    address: 219
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 PV Current"
+    register_type: holding
+    address: 220
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 Battery Average Voltage"
+    register_type: holding
+    address: 215
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 Battery Average Current"
+    register_type: holding
+    address: 232
+    value_type: S_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 AC Output Voltage"
+    register_type: holding
+    address: 210
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 Load Power"
+    register_type: holding
+    address: 213
+    value_type: U_WORD
+    unit_of_measurement: "W"
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p2
+    name: "P2 Inverter Temperature"
+    register_type: holding
+    address: 227
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+
+  # ================= FALOWNIK P3 =================
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 PV Voltage"
+    register_type: holding
+    address: 219
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 PV Current"
+    register_type: holding
+    address: 220
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 Battery Average Voltage"
+    register_type: holding
+    address: 215
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 Battery Average Current"
+    register_type: holding
+    address: 232
+    value_type: S_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 AC Output Voltage"
+    register_type: holding
+    address: 210
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    filters: [ { multiply: 0.1 } ]
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 Load Power"
+    register_type: holding
+    address: 213
+    value_type: U_WORD
+    unit_of_measurement: "W"
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p3
+    name: "P3 Inverter Temperature"
+    register_type: holding
+    address: 227
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+
+# ───────────────── SELEKTORY (tryb pracy, priorytet)
+select:
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Output mode"
+    address: 300
+    use_write_multiple: true
+    value_type: U_WORD
+    optionsmap:
+      "Single": 0
+      "Parallel": 1
+      "Phase P1": 2
+      "Phase P2": 3
+      "Phase P3": 4
+
+  - platform: modbus_controller
+    modbus_controller_id: easun_p1
+    name: "P1 Output priority"
+    address: 301
+    use_write_multiple: true
+    value_type: U_WORD
+    optionsmap:
+      "Utility-PV-Battery (UTI)": 0
+      "PV-Utility-Battery (SUB)": 1
+      "PV-Battery-Utility (SBU)": 2
+      "PV-Utility-Battery (SUF)": 3
