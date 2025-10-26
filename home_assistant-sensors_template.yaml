@@ -1,0 +1,19 @@
+template:
+  - sensor:
+      - name: "Total Load Power"
+        unit_of_measurement: "W"
+        state: >
+          {{ (
+            states('sensor.easun_smg2_3phase_p1_load_power')|float(0) +
+            states('sensor.easun_smg2_3phase_p2_load_power')|float(0) +
+            states('sensor.easun_smg2_3phase_p3_load_power')|float(0)
+          ) | round(0) }}
+
+      - name: "Total PV Power"
+        unit_of_measurement: "W"
+        state: >
+          {{ (
+            states('sensor.easun_smg2_3phase_p1_pv_voltage')|float(0) * states('sensor.easun_smg2_3phase_p1_pv_current')|float(0) +
+            states('sensor.easun_smg2_3phase_p2_pv_voltage')|float(0) * states('sensor.easun_smg2_3phase_p2_pv_current')|float(0) +
+            states('sensor.easun_smg2_3phase_p3_pv_voltage')|float(0) * states('sensor.easun_smg2_3phase_p3_pv_current')|float(0)
+          ) | round(0) }}
